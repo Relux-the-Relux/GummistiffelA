@@ -4,15 +4,21 @@
         <section>
             <div id="map">
                 <MapComponent :areas="areas" v-on:area-updated="onPolygonUpdated" v-on:contextmenu.prevent="openMapMenu"></MapComponent>
-                <ModeSwitch class="toggle-switch"></ModeSwitch>
+                <ModeSwitch class="toggle-switch"
+                            value-left="Übersicht"
+                            value-right="Detail"
+                            :active-value="activeMode"
+                            v-on:on-button-clicked="onToggleClicked"/>
             </div>
             <div id="graphs">
-                <div id="config-button">
-                    <font-awesome-icon icon="times" />
+                <div id="overview-graphs" v-show="activeMode === 'left-button'">
+                    <TestGraph class="graph" id="intensity" title="Intensität" :data="intensityData" :switchable-values="['Maximum', 'Durchschnitt']"></TestGraph>
+                    <TestGraph class="graph" id="duration" title="Dauer" :data="durationData" :switchable-values="['Maximum', 'Durchschnitt']"></TestGraph>
+                    <TestGraph class="graph" id="amount" title="Anzahl" :data="amountData"></TestGraph>
                 </div>
-                <TestGraph class="graph" id="intensity" title="Intensität" :data="intensityData" :switchable-values="['Maximum', 'Durchschnitt']"></TestGraph>
-                <TestGraph class="graph" id="duration" title="Dauer" :data="durationData" :switchable-values="['Maximum', 'Durchschnitt']"></TestGraph>
-                <TestGraph class="graph" id="amount" title="Anzahl" :data="amountData"></TestGraph>
+                <div id="detail-graphs" v-show="activeMode === 'right-button'">
+                    <DetailGraph class="graph" id="range" title="Time" :data="intensityData"></DetailGraph>
+                </div>
             </div>
         </section>
 
@@ -32,16 +38,17 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import ModeSwitch from "@/components/ModeSwitch/ModeSwitch";
+import DetailGraph from "@/components/DetailGraph/DetailGraph";
 
 library.add(faTimes);
 
 export default {
   name: 'app',
   components: {
+      DetailGraph,
       ModeSwitch,
       MapComponent,
       TestGraph,
-      FontAwesomeIcon,
   },
     data: () => {
         return {
@@ -85,33 +92,7 @@ export default {
                 }
             ],
             "areas": [],
-            "toggleOptions": {
-                layout: {
-                    color: 'black',
-                    backgroundColor: 'lightgray',
-                    selectedColor: 'white',
-                    selectedBackgroundColor: 'green',
-                    borderColor: 'black',
-                    fontFamily: 'Arial',
-                    fontWeight: 'normal',
-                    fontWeightSelected: 'bold',
-                    squareCorners: false,
-                    noBorder: false
-                },
-                size: {
-                    fontSize: 1,
-                    height: 2,
-                    width: 10
-                },
-                items: {
-                    preSelected: 'unknown',
-                    disabled: false,
-                    labels: [
-                        {name: 'Übersicht', color: 'white', backgroundColor: 'red'},
-                        {name: 'Detail', color: 'white', backgroundColor: 'green'}
-                    ]
-                  }
-                }
+            "activeMode": "left-button"
           }
     },
     mounted() {
@@ -185,6 +166,10 @@ export default {
         },
         openGraphMenu: function (event) {
             this.$refs.graphMenu.open(event)
+        },
+        onToggleClicked: function (event) {
+
+            this.activeMode = event;
         }
     }
 }
@@ -239,9 +224,14 @@ export default {
         right: 0;
         top: 0;
         margin: 10px;
-        width: 70px;
+        width: 100px;
         height: 20px;
         z-index: 999999999999999999;
+    }
+
+    #overview-graphs {
+        width: 100%;
+        height: 100%;
     }
 
 </style>
