@@ -86,4 +86,21 @@ function getGlobalData() {
     return processResponseData(data);
 }
 
-export {requestPolygonData, getGlobalData}
+
+function rgbToHex (rgb) {
+
+    let hex = '#' + rgb[0].toString(16) + rgb[1].toString(16) + rgb[2].toString(16);
+
+    return hex
+}
+
+function hexToRgb(hex) {
+    let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? [
+    parseInt(result[1], 16),
+    parseInt(result[2], 16),
+    parseInt(result[3], 16)
+    ] : null;
+}
+
+export {requestPolygonData, getGlobalData, rgbToHex, hexToRgb}

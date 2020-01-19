@@ -3,10 +3,7 @@
         <div v-bind:id="id" style="height: 100%; width: 100%;"></div>
         <context-menu :ref="menuRef" >
             <li class="ctx-header">{{title}}</li>
-            <li v-for="(value, name, index) in valueToggleMap"
-                :key="index"
-                v-on:click="toggleValue(name)"
-                class="ctx-item">{{getOptionText(name, value)}}</li>
+            <li class="ctx-item" v-on:click="onChartSelected">Auswählen</li>
         </context-menu>
     </div>
 </template>
@@ -86,6 +83,9 @@
                 });
                 this.chart.render();
 
+            },
+            onChartSelected() {
+                this.$emit('chart-selected')
             }
         },
         watch: {

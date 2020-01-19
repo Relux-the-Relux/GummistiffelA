@@ -12,9 +12,9 @@
             </div>
             <div id="graphs">
                 <div id="overview-graphs" v-show="activeMode === 'left-button'">
-                    <TestGraph class="graph" id="intensity" title="Intensität" :data="intensityData" :switchable-values="['Maximum', 'Durchschnitt']"></TestGraph>
-                    <TestGraph class="graph" id="duration" title="Dauer" :data="durationData" :switchable-values="['Maximum', 'Durchschnitt']"></TestGraph>
-                    <TestGraph class="graph" id="amount" title="Anzahl" :data="amountData"></TestGraph>
+                    <TestGraph class="graph" id="intensity" title="Intensität" :data="intensityData" :switchable-values="['Maximum', 'Durchschnitt']" v-on:chart-selected="chartSelected('intensityData')"></TestGraph>
+                    <TestGraph class="graph" id="duration" title="Dauer" :data="durationData" :switchable-values="['Maximum', 'Durchschnitt']" v-on:chart-selected="chartSelected('durationData')"></TestGraph>
+                    <TestGraph class="graph" id="amount" title="Anzahl" :data="amountData" v-on:chart-selected="chartSelected('amountData')"></TestGraph>
                 </div>
                 <div id="detail-graphs" v-show="activeMode === 'right-button'">
                     <DetailGraph class="graph" id="range" title="Time" :data="intensityData"></DetailGraph>
@@ -32,11 +32,10 @@
 import TestGraph from "@/components/TestGraph/TestGraph";
 import MapComponent from "@/components/MapComponent/MapComponent";
 
-import {requestPolygonData, getGlobalData} from "@/utils/utils";
+import {requestPolygonData, getGlobalData, rgbToHex, hexToRgb} from "@/utils/utils";
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faTimes } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import ModeSwitch from "@/components/ModeSwitch/ModeSwitch";
 import DetailGraph from "@/components/DetailGraph/DetailGraph";
 
@@ -56,15 +55,6 @@ export default {
               {
                   type: "column",
                   name: "Durchschnitt",
-                  color: "#0d47a1",
-                  showInLegend: true,
-                  dataPoints: []
-              },
-              {
-                  type: "column",
-                  name: "Maximum",
-                  color: "#b71c1c",
-                  showInLegend: true,
                   dataPoints: []
               }
           ],
@@ -72,22 +62,12 @@ export default {
               {
                   type: "column",
                   name: "Durchschnitt",
-                  color: "#0d47a1",
-                  showInLegend: true,
-                  dataPoints: []
-              },
-              {
-                  type: "column",
-                  name: "Maximum",
-                  color: "#b71c1c",
-                  showInLegend: true,
                   dataPoints: []
               }
           ],
             "amountData": [
                 {
                     type: "column",
-                    color: "#0d47a1",
                     dataPoints: []
                 }
             ],
@@ -98,13 +78,11 @@ export default {
     mounted() {
         let globalData = getGlobalData();
 
-        this.intensityData[0].dataPoints.push({label: "Gesamt", y: globalData.intensity.average});
-        this.intensityData[1].dataPoints.push({label: "Gesamt", y: globalData.intensity.max});
+        this.intensityData[0].dataPoints.push({label: "Gesamt", y: globalData.intensity.average, color: "#0d47a1"});
 
-        this.durationData[0].dataPoints.push({label: "Gesamt", y: globalData.duration.average});
-        this.durationData[1].dataPoints.push({label: "Gesamt", y: globalData.duration.max});
+        this.durationData[0].dataPoints.push({label: "Gesamt", y: globalData.duration.average, color: "#0d47a1"});
 
-        this.amountData[0].dataPoints.push({label: "Gesamt", y: globalData.amount})
+        this.amountData[0].dataPoints.push({label: "Gesamt", y: globalData.amount, color: "#0d47a1"})
     },
     methods: {
         onPolygonUpdated: function (area) {
@@ -115,34 +93,28 @@ export default {
                         // Add or update the new intensity data
 
                         let averageIntensityDataPoint = this.intensityData[0].dataPoints.find(element => element.label === area.name);
-                        let maximumIntensityDataPoint = this.intensityData[1].dataPoints.find(element => element.label === area.name);
 
-                        if (averageIntensityDataPoint !== undefined && maximumIntensityDataPoint !== undefined) {
+                        if (averageIntensityDataPoint !== undefined) {
 
                             averageIntensityDataPoint.y = result.intensity.average;
-                            maximumIntensityDataPoint.y = result.intensity.max;
 
                         } else {
 
-                            this.intensityData[0].dataPoints.push({label: area.name, y: result.intensity.average});
-                            this.intensityData[1].dataPoints.push({label: area.name, y: result.intensity.max});
+                            this.intensityData[0].dataPoints.push({label: area.name, y: result.intensity.average, color: "#0d47a1"});
 
                         }
 
                         // Add or update the new duration data
 
                         let averageDurationDataPoint = this.durationData[0].dataPoints.find(element => element.label === area.name);
-                        let maximumDurationDataPoint = this.durationData[1].dataPoints.find(element => element.label === area.name);
 
-                        if (averageDurationDataPoint !== undefined && maximumDurationDataPoint !== undefined) {
+                        if (averageDurationDataPoint !== undefined) {
 
                             averageDurationDataPoint.y = result.duration.average;
-                            maximumDurationDataPoint.y = result.duration.max;
 
                         } else {
 
-                            this.durationData[0].dataPoints.push({label: area.name, y: result.duration.average});
-                            this.durationData[1].dataPoints.push({label: area.name, y: result.duration.max});
+                            this.durationData[0].dataPoints.push({label: area.name, y: result.duration.average, color: "#0d47a1"});
 
                         }
 
@@ -153,7 +125,7 @@ export default {
                             amountDataPoint.y = result.amount;
 
                         } else {
-                            this.amountData[0].dataPoints.push({label: area.name, y: result.amount})
+                            this.amountData[0].dataPoints.push({label: area.name, y: result.amount, color: "#0d47a1"})
                         }
 
                         window.console.log(result);
@@ -170,6 +142,82 @@ export default {
         onToggleClicked: function (event) {
 
             this.activeMode = event;
+        },
+        chartSelected: function(dataName) {
+
+            this.resetChartColors();
+
+            let dataPoints = this.$data[dataName][0].dataPoints;
+
+            // Get the maximum value
+
+            let maxValue = 0;
+            let maxLabel = "";
+
+            for (let i=0; i<dataPoints.length; i++) {
+                let dataPoint = dataPoints[i];
+
+                if ( dataPoint.y > maxValue) {
+
+                    maxValue = dataPoint.y;
+                    maxLabel = dataPoint.label
+
+                }
+            }
+
+            for (let i=0; i<dataPoints.length; i++) {
+                let dataPoint = dataPoints[i];
+
+                let ratio = dataPoint.y / maxValue;
+
+                let color = this.pickRgb(hexToRgb("#000099"), hexToRgb("#33ccff"), ratio);
+
+                color = rgbToHex(color)
+
+                dataPoint.color = color;
+
+                this.setAreaColor(dataPoint.label, color)
+            }
+        },
+        pickRgb: function(color1, color2, weight) {
+            let w1 = 1 - weight;
+            let w2 = weight;
+            let rgb = [Math.round(color1[0] * w1 + color2[0] * w2),
+                Math.round(color1[1] * w1 + color2[1] * w2),
+                Math.round(color1[2] * w1 + color2[2] * w2)];
+            return rgb;
+        },
+        resetChartColors: function() {
+            for (let i=0; i<this.intensityData[0].dataPoints.length; i++) {
+                let dataPoint = this.intensityData[0].dataPoints[i]
+
+                dataPoint.color = "#0d47a1"
+            }
+
+            for (let i=0; i<this.durationData[0].dataPoints.length; i++) {
+                let dataPoint = this.durationData[0].dataPoints[i]
+
+                dataPoint.color = "#0d47a1"
+            }
+
+            for (let i=0; i<this.amountData[0].dataPoints.length; i++) {
+                let dataPoint = this.amountData[0].dataPoints[i]
+
+                dataPoint.color = "#0d47a1"
+            }
+        },
+        setAreaColor: function (label, color) {
+
+            for (let i=0; i<this.areas.length; i++) {
+
+                let area = this.areas[i];
+
+                if (area.name === label) {
+                    area.polygon.setStyle({fillColor: color, color: color});
+                }
+
+            }
+
         }
     }
 }
