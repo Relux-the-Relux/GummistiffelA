@@ -237,13 +237,15 @@ export default {
 
                 this.setAreaColor(dataPoint.label, color)
 
-                // Reset selected colors
-                if (this.firstSelection != null) {
-                    this.setAreaColor(this.firstSelection.name, this.firstSelectionColor);
-                }
+                // Reset selected colors if on detail view
+                if (this.activeMode === 'right-button') {
+                    if (this.firstSelection != null) {
+                        this.setAreaColor(this.firstSelection.name, this.firstSelectionColor);
+                    }
 
-                if(this.secondSelection != null) {
-                    this.setAreaColor(this.secondSelection.name, this.secondSelectionColor);
+                    if (this.secondSelection != null) {
+                        this.setAreaColor(this.secondSelection.name, this.secondSelectionColor);
+                    }
                 }
             }
 
