@@ -3,6 +3,8 @@
         <div id="map"></div>
         <context-menu ref="mapMenuRef" >
             <li class="ctx-header">{{contextMenuTitle}}</li>
+            <li v-if="showSelect" class="ctx-item" v-on:click="onCompareClicked">Zu Detailsicht hinzufügen</li>
+            <li v-if="!showSelect" class="ctx-item" v-on:click="onRemoveFromCompareClicked">Von Detailsicht entfernen</li>
             <li class="ctx-item" v-on:click="onEditClicked">Bearbeiten</li>
             <li class="ctx-item" v-on:click="onUndoPoint">Punkt zurück</li>
             <li class="ctx-item" v-on:click="onDeletePolygon">Löschen</li>
@@ -27,7 +29,9 @@
 
     export default {
         props: {
-            areas: Array
+            areas: Array,
+            detailAreaOne: Object,
+            detailAreaTwo: Object
         },
         components: {
             contextMenu
@@ -36,7 +40,7 @@
           return {
               "mapView": null,
               "activeArea": null,
-              "selectedArea": null
+              "selectedArea": null,
           }
         },
         mounted() {
@@ -92,6 +96,7 @@
                     this.activeArea.polygon.setStyle({fillColor: '#2979ff', color: '#2979ff'});
                     this.activeArea = null;
                     L.DomEvent.stopPropagation(event)
+                    this.$emit("polygon-finished")
                 }
             },
             onPolygonContextMenu: function (event) {
@@ -107,8 +112,6 @@
             },
             onUndoPoint() {
 
-
-
                 let latLngs = this.selectedArea.polygon.getLatLngs()[0];
                 latLngs.pop();
 
@@ -121,12 +124,25 @@
             },
             onDeletePolygon() {
 
-                this.activeArea.polygon.setStyle({fillColor: '#2979ff', color: '#2979ff'});
+                let label = this.selectedArea.name;
 
+                if (this.activeArea != null) {
+
+                    this.activeArea.polygon.setStyle({fillColor: '#2979ff', color: '#2979ff'});
+
+                }
                 this.areas.splice(this.areas.indexOf(this.selectedArea), 1);
                 this.selectedArea.polygon.remove();
                 this.selectedArea = null;
                 this.activeArea = null;
+
+                this.$emit("area-removed", label)
+            },
+            onCompareClicked() {
+                this.$emit("compare-area", this.selectedArea)
+            },
+            onRemoveFromCompareClicked() {
+                this.$emit("remove-compare-area", this.selectedArea)
             }
         },
         computed: {
@@ -135,6 +151,20 @@
                     return this.selectedArea.name;
                 }
                 return ""
+            },
+            showSelect: function() {
+                if (this.detailAreaOne != null && this.detailAreaOne.name === this.selectedArea.name) {
+
+                    return false
+
+                } else if (this.detailAreaTwo != null && this.detailAreaTwo.name === this.selectedArea.name) {
+
+                    return false
+
+                } else {
+
+                    return true
+                }
             }
         }
     };

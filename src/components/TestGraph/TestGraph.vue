@@ -18,7 +18,8 @@
             "id": String,
             "title": String,
             "data": Array,
-            "switchableValues": Array
+            "switchableValues": Array,
+            "yaxisTitle": String
         },
         components: {
             contextMenu
@@ -41,7 +42,10 @@
                 title:{
                     text: this.title
                 },
-                data: this.data
+                data: this.data,
+                axisY:{
+                    title: this.yaxisTitle
+                }
             });
             this.chart.render();
         },

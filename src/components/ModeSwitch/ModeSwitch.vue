@@ -1,7 +1,7 @@
 <template>
     <div class="ModeSwitch">
-        <div class="left-button" v-on:click="onButtonClicked" :style="{ 'background-color': leftColor }">{{valueLeft}}</div>
-        <div class="right-button" v-on:click="onButtonClicked" :style="{ 'background-color': rightColor }">{{valueRight}}</div>
+        <div class="left-button" v-on:click="onButtonClicked" :style="{ 'background-color': leftColor, 'color': leftTextColor }">{{valueLeft}}</div>
+        <div class="right-button" v-on:click="onButtonClicked" :style="{ 'background-color': rightColor, 'color': rightTextColor }">{{valueRight}}</div>
     </div>
 </template>
 
@@ -23,17 +23,35 @@
         computed: {
             leftColor: function () {
                 if (this.activeValue === 'left-button') {
-                    return "green"
+                    return "#000099"
                 } else {
-                    return "red"
+                    return "white"
                 }
             },
             rightColor: function () {
                 if (this.activeValue === 'right-button') {
-                    return "green"
+                    return "#000099"
                 } else {
-                    return "red"
+                    return "white"
                 }
+            },
+            leftTextColor: function () {
+
+                if (this.activeValue === 'left-button') {
+                    return "white"
+                } else {
+                    return "#000099"
+                }
+
+            },
+            rightTextColor: function () {
+
+                if (this.activeValue === 'right-button') {
+                    return "white"
+                } else {
+                    return "#000099"
+                }
+
             }
 
         }
@@ -47,6 +65,7 @@
         height: 100%;
         color: white;
         cursor: pointer;
+        text-align: center;
     }
     .right-button {
         float: right;
@@ -54,6 +73,7 @@
         height: 100%;
         color: white;
         cursor: pointer;
+        text-align: center;
     }
 </style>
 

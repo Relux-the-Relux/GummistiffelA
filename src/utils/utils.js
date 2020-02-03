@@ -38,7 +38,9 @@ async function requestPolygonData(polygon) {
 
 function processResponseData(responseData) {
 
-    let result = {};
+    let result = {
+        dataPoints: []
+    };
 
     // Calculate the amount of datapoints
     result.amount = responseData.length;
@@ -50,6 +52,14 @@ function processResponseData(responseData) {
     let max_duration = 0;
 
     for (let i=0; i < responseData.length; i++) {
+
+        result.dataPoints.push({
+            date: responseData[i].start.slice(0,4),
+            intensity: responseData[i].si,
+            duration: responseData[i].length
+        })
+
+
         let intensity = responseData[i].si
 
         if (intensity > max_intensity) {
@@ -89,7 +99,28 @@ function getGlobalData() {
 
 function rgbToHex (rgb) {
 
-    let hex = '#' + rgb[0].toString(16) + rgb[1].toString(16) + rgb[2].toString(16);
+	let hex = "#"
+
+    let r = rgb[0].toString(16)
+    if (r.length < 2) {
+    r = "0" + r
+    }
+
+    hex += r;
+
+    let g = rgb[1].toString(16)
+    if (g.length < 2) {
+    g = "0" + g
+    }
+
+    hex += g;
+
+    let b = rgb[2].toString(16)
+    if (b.length < 2) {
+    b = "0" + b
+    }
+
+    hex += b;
 
     return hex
 }
@@ -102,5 +133,8 @@ function hexToRgb(hex) {
     parseInt(result[3], 16)
     ] : null;
 }
+function isInt(n) {
+   return n % 1 === 0;
+}
 
-export {requestPolygonData, getGlobalData, rgbToHex, hexToRgb}
+export {requestPolygonData, getGlobalData, rgbToHex, hexToRgb, isInt}

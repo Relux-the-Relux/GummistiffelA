@@ -1,5 +1,5 @@
 <template>
-    <div class="DetailGraph">
+    <div class="DetailBarGraph">
         <!--div v-bind:id="id" style="height: 100%; width: 100%;"></--div-->
         <Plotly :data="data" :displayModeBar="false" :layout="layout" :style="style"></Plotly>
     </div>
@@ -24,8 +24,8 @@
             return {
                 layout: {
                     title: {
-                        text: this.title
-                    },
+                    text: this.title
+                },
                     margin: {
                         l: 45,
                         t: 30,
@@ -57,15 +57,24 @@
                         x: [],
                         name: this.firstSelection.name,
                         marker: {color: this.firstColor},
-                        type: "box"
+                        type: "bar"
                     }
 
                     for (let i=0; i<this.firstSelection.dataPoints.length; i++) {
 
                         let dataPoint = this.firstSelection.dataPoints[i];
 
-                        firstSelectionData.y.push(dataPoint[this.dataName]);
-                        firstSelectionData.x.push(dataPoint.date);
+                        if (firstSelectionData.x.indexOf(dataPoint.date) >= 0) {
+
+                            let index = firstSelectionData.x.indexOf(dataPoint.date)
+                            firstSelectionData.y[index] += 1
+
+                        } else {
+
+                            firstSelectionData.x.push(dataPoint.date)
+                            firstSelectionData.y.push(1)
+
+                        }
 
                     }
 
@@ -80,15 +89,24 @@
                         x: [],
                         name: this.secondSelection.name,
                         marker: {color: this.secondColor},
-                        type: "box"
+                        type: "bar"
                     }
 
                     for (let i=0; i<this.secondSelection.dataPoints.length; i++) {
 
                         let dataPoint = this.secondSelection.dataPoints[i];
 
-                        secondSelectionData.y.push(dataPoint[this.dataName]);
-                        secondSelectionData.x.push(dataPoint.date);
+                        if (secondSelectionData.x.indexOf(dataPoint.date) >= 0) {
+
+                            let index = secondSelectionData.x.indexOf(dataPoint.date)
+                            secondSelectionData.y[index] += 1
+
+                        } else {
+
+                            secondSelectionData.x.push(dataPoint.date)
+                            secondSelectionData.y.push(1)
+
+                        }
 
                     }
 
