@@ -3,10 +3,7 @@
         <div v-bind:id="id" style="height: 100%; width: 100%;"></div>
         <context-menu :ref="menuRef" >
             <li class="ctx-header">{{title}}</li>
-            <li v-for="(value, name, index) in valueToggleMap"
-                :key="index"
-                v-on:click="toggleValue(name)"
-                class="ctx-item">{{getOptionText(name, value)}}</li>
+            <li class="ctx-item" v-on:click="onChartSelected">Auswählen</li>
         </context-menu>
     </div>
 </template>
@@ -21,7 +18,8 @@
             "id": String,
             "title": String,
             "data": Array,
-            "switchableValues": Array
+            "switchableValues": Array,
+            "yaxisTitle": String
         },
         components: {
             contextMenu
@@ -44,7 +42,10 @@
                 title:{
                     text: this.title
                 },
-                data: this.data
+                data: this.data,
+                axisY:{
+                    title: this.yaxisTitle
+                }
             });
             this.chart.render();
         },
@@ -86,6 +87,9 @@
                 });
                 this.chart.render();
 
+            },
+            onChartSelected() {
+                this.$emit('chart-selected')
             }
         },
         watch: {
