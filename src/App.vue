@@ -11,7 +11,8 @@
                     v-on:contextmenu.prevent="openMapMenu"
                     v-on:area-removed="onAreaRemoved"
                     v-on:compare-area="onCompareArea"
-                    v-on:remove-compare-area="onRemoveCompareArea"></MapComponent>
+                    v-on:remove-compare-area="onRemoveCompareArea"
+                    v-on:polygon-finished="onPolygonFinished"></MapComponent>
                 <ModeSwitch class="toggle-switch"
                             value-left="Übersicht"
                             value-right="Detail"
@@ -23,8 +24,8 @@
             </div>
             <div id="graphs">
                 <div id="overview-graphs" v-if="activeMode === 'left-button'">
-                    <StandardGraph class="graph" id="intensity" title="Intensität" yaxis-title="SI" :data="intensityData[0]" v-on:chart-selected="chartSelected('intensityData')"></StandardGraph>
-                    <StandardGraph class="graph" id="duration" title="Dauer" yaxis-title="Stunden" :data="durationData[0]" v-on:chart-selected="chartSelected('durationData')"></StandardGraph>
+                    <StandardGraph class="graph" id="intensity" title="Durchschnittliche Intensität" yaxis-title="SI" :data="intensityData[0]" v-on:chart-selected="chartSelected('intensityData')"></StandardGraph>
+                    <StandardGraph class="graph" id="duration" title="Durchschnittliche Dauer" yaxis-title="Stunden" :data="durationData[0]" v-on:chart-selected="chartSelected('durationData')"></StandardGraph>
                     <StandardGraph class="graph" id="amount" title="Anzahl" yaxis-title="Ereignisse" :data="amountData[0]" v-on:chart-selected="chartSelected('amountData')"></StandardGraph>
                 </div>
                 <div id="detail-graphs" v-if="activeMode === 'right-button'">
@@ -55,9 +56,17 @@
                         :first-color="firstSelectionColor"
                         :second-color="secondSelectionColor"></DetailBarGraph>
                 </div>
+                <div class="color-picker" v-on:click="showContextMenu">
+                    <font-awesome-icon icon="palette" />
+                </div>
             </div>
         </section>
-
+        <context-menu ref="colorMenuRef" >
+            <li class="ctx-header">Farbschema</li>
+            <li class="ctx-item" v-on:click="onColorSelected('blue')">Blau</li>
+            <li class="ctx-item" v-on:click="onColorSelected('red')">Rot</li>
+            <li class="ctx-item" v-on:click="onColorSelected('green')">Grün</li>
+        </context-menu>
     </div>
 </template>
 
@@ -65,19 +74,20 @@
 
 //import ScraperSetup from "@/components/scraper_setup/ScraperSetup";
 
-import TestGraph from "@/components/TestGraph/TestGraph";
 import MapComponent from "@/components/MapComponent/MapComponent";
 
 import {requestPolygonData, getGlobalData, rgbToHex, hexToRgb, isInt} from "@/utils/utils";
 
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faTimes } from '@fortawesome/free-solid-svg-icons'
+import { faPalette } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import contextMenu from 'vue-context-menu'
 import ModeSwitch from "@/components/ModeSwitch/ModeSwitch";
 import DetailGraph from "@/components/DetailGraph/DetailGraph";
 import DetailBarGraph from "@/components/DetailBarGraph/DetailBarGraph";
 import StandardGraph from "@/components/StandardGraph/StandardGraph";
 
-library.add(faTimes);
+library.add(faPalette);
 
 export default {
   name: 'app',
@@ -87,6 +97,8 @@ export default {
       DetailGraph,
       ModeSwitch,
       MapComponent,
+      FontAwesomeIcon,
+      contextMenu
   },
     data: () => {
         return {
@@ -110,12 +122,15 @@ export default {
                 }
             ],
             "firstSelection": null,
-            "firstSelectionColor": "#2e7d32",
-            "secondSelectionColor": "#c62828",
+            "firstSelectionColor": "#4caf50",
+            "secondSelectionColor": "#f44336",
             "standardColor": "#2979ff",
             "activeColor": "#ff9100",
+            "maxColor": "#c3fdff",
+            "minColor": "#0d47a1",
             "secondSelection": null,
             "areas": [],
+            "activeAreaName": null,
             "activeMode": "left-button",
             "selectedMetric": null,
             "selectedMetricMax": null,
@@ -133,6 +148,9 @@ export default {
     },
     methods: {
         onPolygonUpdated: function (area) {
+
+            this.activeAreaName = area.name
+
             if (area.polygon.getLatLngs()[0].length > 2) {
                 requestPolygonData(area.polygon)
                     .then((result) => {
@@ -186,6 +204,15 @@ export default {
                     })
             }
         },
+        onPolygonFinished: function () {
+
+            this.activeAreaName = null;
+
+            if (this.selectedMetric != null) {
+                this.chartSelected(this.selectedMetric)
+            }
+
+        },
         openMapMenu: function (event) {
             this.$refs.mapMenu.open(event)
         },
@@ -229,13 +256,15 @@ export default {
 
                 let ratio = (dataPoint.y - minValue) / (maxValue - minValue);
 
-                let color = this.pickRgb(hexToRgb("#000099"), hexToRgb("#33ccff"), ratio);
+                let color = this.pickRgb(hexToRgb(this.minColor), hexToRgb(this.maxColor), ratio);
 
                 color = rgbToHex(color)
 
                 dataPoint.color = color;
 
-                this.setAreaColor(dataPoint.label, color)
+                if (this.activeAreaName !== dataPoint.label) {
+                    this.setAreaColor(dataPoint.label, color)
+                }
 
                 // Reset selected colors if on detail view
                 if (this.activeMode === 'right-button') {
@@ -252,8 +281,8 @@ export default {
             let c = document.getElementById("colorScaleCanvas");
             let ctx = c.getContext("2d");
             let grd = ctx.createLinearGradient(0, 0, 0, 200);
-            grd.addColorStop(0, "#33ccff");
-            grd.addColorStop(1, "#000099");
+            grd.addColorStop(0, this.maxColor);
+            grd.addColorStop(1, this.minColor);
             ctx.fillStyle = grd;
             ctx.fillRect(0, 0, 60, 200);
 
@@ -378,6 +407,53 @@ export default {
                 this.setAreaColor(this.secondSelection.name, this.secondSelectionColor);
             }
         },
+        showContextMenu: function(event) {
+            this.$refs["colorMenuRef"].open(event);
+            event.stopPropagation(event)
+        },
+        onColorSelected(color) {
+            switch (color) {
+                case 'blue':
+
+                    this.minColor = "#0d47a1"
+                    this.maxColor = "#c3fdff"
+
+                    this.firstSelectionColor = "#4caf50"
+                    this.secondSelectionColor = "#f44336"
+
+                    if (this.selectedMetric != null) {
+                        this.chartSelected(this.selectedMetric)
+                    }
+
+                    break;
+                case 'red':
+                    this.minColor = "#b71c1c"
+                    this.maxColor = "#ffcccb"
+
+                    this.firstSelectionColor = "#4caf50"
+                    this.secondSelectionColor = "#2196f3"
+
+                    if (this.selectedMetric) {
+                        this.chartSelected(this.selectedMetric)
+                    }
+                    break;
+
+                case 'green':
+
+                    this.minColor = "#1b5e20"
+                    this.maxColor = "#d7ffd9"
+
+                    this.firstSelectionColor = "#2196f3"
+                    this.secondSelectionColor = "#f44336"
+
+                    if (this.selectedMetric) {
+                        this.chartSelected(this.selectedMetric)
+                    }
+                    break;
+
+            }
+        }
+
     },
     watch: {
       activeMode: function (value) {
@@ -498,6 +574,19 @@ export default {
         height: fit-content;
         width: fit-content;
         color: white;
+    }
+
+    .color-picker {
+        position: absolute;
+        right: 0;
+        top: 0;
+        margin: 10px;
+        z-index: 999999999999999999;
+        height: fit-content;
+        width: fit-content;
+    }
+    .color-picker:hover {
+        cursor: pointer;
     }
 
 

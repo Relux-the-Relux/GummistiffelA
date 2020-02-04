@@ -21,7 +21,7 @@ async function requestPolygonData(polygon) {
     let polygonString = convertLeafletPolygonToWktFormat(polygon);
     let queryString = "subset=intersects(" + polygonString + ")";
 
-    let url = "http://rz-vm154.gfz-potsdam.de:8080/highprecip/events/query?subset=area(0.5,20)&" + queryString;
+    let url = "http://rz-vm154.gfz-potsdam.de:8080/highprecip/events/query?subset=si(0.1,20)&" + queryString;
 
     window.console.log(url);
 
